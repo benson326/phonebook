@@ -8,8 +8,11 @@
 
 #ifdef OPT
 #define OUT_FILE "opt.txt"
-#else
+#define hh 0
+#endif
+#ifdef ORIG
 #define OUT_FILE "orig.txt"
+#define hh 0
 #endif
 
 #define DICT_FILE "./dictionary/words.txt"
