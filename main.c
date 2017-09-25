@@ -14,6 +14,10 @@
 #define OUT_FILE "orig.txt"
 #define hh 0
 #endif
+#ifdef HASH
+#define OUT_FILE "hash.txt"
+#define hh 1
+#endif
 
 #define DICT_FILE "./dictionary/words.txt"
 
@@ -33,7 +37,7 @@ static double diff_in_second(struct timespec t1, struct timespec t2)
 int main(int argc, char *argv[])
 {
     FILE *fp;
-    int i = 0;
+    int i = 0,j;
     char line[MAX_LAST_NAME_SIZE];
     struct timespec start, end;
     double cpu_time1, cpu_time2;
@@ -46,11 +50,17 @@ int main(int argc, char *argv[])
     }
 
     /* build the entry */
-    entry *pHead, *e;
+    entry *pHead = NULL, *e = NULL, *hash[26], *hHead[26];
     pHead = (entry *) malloc(sizeof(entry));
     printf("size of entry : %lu bytes\n", sizeof(entry));
     e = pHead;
     e->pNext = NULL;
+
+    for(j=0; j<26; j++) {
+        hHead[j] = (entry *) malloc(sizeof(entry));
+        hash[j]= hHead[j];
+        hash[j]->pNext = NULL;
+    }
 
 #if defined(__GNUC__)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
@@ -61,7 +71,11 @@ int main(int argc, char *argv[])
             i++;
         line[i - 1] = '\0';
         i = 0;
-        e = append(line, e);
+        if(hh==1) {
+            j =line[0]-'a';
+            hash[j] = append(line,hash[j]);
+        } else
+            e = append(line, e);
     }
     clock_gettime(CLOCK_REALTIME, &end);
     cpu_time1 = diff_in_second(start, end);
@@ -73,7 +87,13 @@ int main(int argc, char *argv[])
 
     /* the givn last name to find */
     char input[MAX_LAST_NAME_SIZE] = "zyxel";
-    e = pHead;
+
+
+    if (hh==1) {
+        j =line[0]-'a';
+        e = hHead[j];
+    } else
+        e = pHead;
 
     //assert(findName(input, e) &&
     //       "Did you implement findName() in " IMPL "?");
@@ -103,6 +123,18 @@ int main(int argc, char *argv[])
         free(next);
     }
     free(pHead);
+
+
+    for (i = 0; i < 26; i++) {
+
+        while(hHead[i]->pNext) {
+            entry *next = hHead[i]->pNext;
+            hHead[i]->pNext = next->pNext;
+            free(next);
+        }
+        free(hHead[i]);
+    }
+
 
     return 0;
 }
